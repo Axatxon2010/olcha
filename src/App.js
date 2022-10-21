@@ -1,23 +1,54 @@
-import logo from './logo.svg';
-import './App.css';
-
+import Navbar from "./Components/Navbar.js";
+import New from "./Components/New Products/New.js";
+import Payment from "./Components/Payment/Payment.js";
+import Trending from "./Components/Trending Products/Trending.js";
+import { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { UserContextApi } from "./Components/context/UseContext"
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "./firebase/firbaseConfig"
 function App() {
+  const { value } = useContext(UserContextApi)
+  // console.log(value)/
+  const [document, setDocument] = useState([])
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    const getData = async () => {
+      await axios
+        .get("https://fakestoreapi.com/products")
+        .then((res) => setData(res.data))
+        .catch((err) => console.log(err));
+    };
+
+
+
+    return () => {
+      getData();
+    };
+  }, []);
+
+
+  useEffect(() => {
+    const getData = async () => {
+      onSnapshot(
+        collection(db, "products"),
+        (snapshot) => {
+          console.log(snapshot.docs)
+          setDocument(snapshot.docs.map(doc => doc.data()))
+        },
+        (error) => {
+          console.log(error);
+        });
+    }
+    getData()
+  }, []);
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Navbar />
+      {/* <TopSlider /> */}
+      <Trending data={data} />
+      <New data={data} />
+      <Payment data={data} />
     </div>
   );
 }
